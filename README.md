@@ -55,3 +55,4 @@ cp env.example .env
   - `/unbind <telegram_id> <mikrotik_username>`
   - `/set_fw_comment <telegram_id> <comment substring>`
 
+# 2FA-Mikrotik-TG-Only
