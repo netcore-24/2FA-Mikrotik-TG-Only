@@ -29,15 +29,35 @@ cp env.example .env
 ./venv/bin/python -m mikrotik_2fa_bot
 ```
 
+## Установка одним скриптом (с автозапуском)
+
+Скрипт установит зависимости, **спросит в консоли** токен бота, `ADMIN_CHAT_ID`, адрес/логин/пароль MikroTik, создаст `.env` и systemd автозапуск:
+
+```bash
+cd mikrotik-2fa-telegram-only
+sudo bash install.sh
+```
+
+По умолчанию проект будет развернут в: `/opt/mikrotik-2fa-telegram-only`
+
 ## Конфигурация
 
 См. `env.example`.
+
+Дополнительно, админ может менять часть параметров **в рантайме** через Telegram команду `/router_settings`:
+- параметры подключения RouterOS API (host/port/ssl/user/pass/timeout)
+- поведение VPN/2FA: длительность сессии, таймаут подтверждения, повторные запросы подтверждения, grace period на отключение
 
 ## Важные ограничения (по вашему требованию)
 
 - Детект подключений делается **строго через User Manager sessions** (`/user-manager session`) — без PPP fallback.
 - Включение/выключение пользователя делается **строго через User Manager user** (`/user-manager user`) — если пользователя нет в User Manager, бот вернёт ошибку.
-- Админские команды разрешены **только из `ADMIN_CHAT_ID`**.
+- Админские команды разрешены по одному из способов:
+  - `ADMIN_CHAT_ID` (если задан)
+  - `ADMIN_TELEGRAM_IDS` (рекомендуется)
+  - `ADMIN_USERNAMES` (fallback)
+
+Чтобы узнать свои значения, используйте команду бота: `/whoami`.
 
 ## Команды Telegram (план)
 

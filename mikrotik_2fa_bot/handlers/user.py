@@ -4,6 +4,8 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from mikrotik_2fa_bot.db import db_session
+from mikrotik_2fa_bot.handlers.menu import main_menu
+from mikrotik_2fa_bot.handlers.util import is_admin
 from mikrotik_2fa_bot.models import UserStatus, VpnSession
 from mikrotik_2fa_bot.services import mikrotik_api
 from mikrotik_2fa_bot.services.users import get_user_by_telegram_id, list_user_accounts
@@ -17,6 +19,8 @@ from mikrotik_2fa_bot.services.vpn_sessions import (
 
 async def request_vpn_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
+    chat_id = update.effective_chat.id
+    username = getattr(update.effective_user, "username", None)
     with db_session() as db:
         user = get_user_by_telegram_id(db, uid)
         if not user:
@@ -44,6 +48,8 @@ async def request_vpn_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def my_sessions_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
+    chat_id = update.effective_chat.id
+    username = getattr(update.effective_user, "username", None)
     with db_session() as db:
         user = get_user_by_telegram_id(db, uid)
         if not user:
@@ -51,18 +57,23 @@ async def my_sessions_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         sessions = list_user_active_sessions(db, user.id)
     if not sessions:
-        await update.message.reply_text("Активных сессий нет.")
+        await update.message.reply_text("Активных сессий нет.", reply_markup=main_menu(is_admin=is_admin(chat_id, uid, username)))
         return
     lines = []
     kb_rows = []
     for s in sessions[:10]:
         lines.append(f"- {s.id} | {s.mikrotik_username} | {s.status.value}")
         kb_rows.append([InlineKeyboardButton(f"🔌 Disconnect {s.mikrotik_username}", callback_data=f"disconnect:{s.id}")])
-    await update.message.reply_text("Ваши активные сессии:\n" + "\n".join(lines), reply_markup=InlineKeyboardMarkup(kb_rows))
+    await update.message.reply_text(
+        "Ваши активные сессии:\n" + "\n".join(lines),
+        reply_markup=InlineKeyboardMarkup(kb_rows),
+    )
 
 
 async def disable_vpn_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
+    chat_id = update.effective_chat.id
+    username = getattr(update.effective_user, "username", None)
     with db_session() as db:
         user = get_user_by_telegram_id(db, uid)
         if not user:
@@ -77,7 +88,7 @@ async def disable_vpn_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 mikrotik_api.set_vpn_user_disabled(a.mikrotik_username, disabled=True)
             except Exception:
                 pass
-    await update.message.reply_text("Готово. Доступ отключен.")
+    await update.message.reply_text("Готово. Доступ отключен.", reply_markup=main_menu(is_admin=is_admin(chat_id, uid, username)))
 
 
 async def _create_request_for_username(bot, chat_id: int, telegram_user_id: int, username: str):

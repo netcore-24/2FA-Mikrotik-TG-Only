@@ -44,6 +44,24 @@ def list_sessions_to_poll(db: Session) -> list[VpnSession]:
     )
 
 
+def list_recent_sessions(db: Session, limit: int = 30) -> list[VpnSession]:
+    return (
+        db.query(VpnSession)
+        .order_by(VpnSession.created_at.desc())
+        .limit(int(limit))
+        .all()
+    )
+
+
+def list_active_sessions_all_users(db: Session) -> list[VpnSession]:
+    return (
+        db.query(VpnSession)
+        .filter(VpnSession.status.in_(list(ACTIVE_STATUSES)))
+        .order_by(VpnSession.created_at.desc())
+        .all()
+    )
+
+
 def create_vpn_request(db: Session, user: User, mikrotik_username: str) -> VpnSession:
     if user.status != UserStatus.APPROVED:
         raise ValueError("user_not_approved")
@@ -85,6 +103,9 @@ def mark_confirm_requested(db: Session, session: VpnSession) -> VpnSession:
     now = datetime.utcnow()
     session.status = SessionStatus.CONFIRM_REQUESTED
     session.confirm_requested_at = now
+    session.confirm_last_sent_at = now
+    # first prompt counts as 1
+    session.confirm_sent_count = max(1, int(getattr(session, "confirm_sent_count", 0) or 0))
     db.commit()
     db.refresh(session)
     return session
@@ -135,6 +156,10 @@ def expire_session(db: Session, session: VpnSession) -> VpnSession:
         pass
     try:
         mikrotik_api.set_vpn_user_disabled(session.mikrotik_username, disabled=True)
+    except Exception:
+        pass
+    try:
+        mikrotik_api.disconnect_active_connections(session.mikrotik_username)
     except Exception:
         pass
     return session
