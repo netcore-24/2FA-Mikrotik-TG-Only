@@ -1,5 +1,9 @@
 .env
 
+# Keys / accidental git files
+git
+git.pub
+
 # Python
 __pycache__/
 *.py[cod]
