@@ -40,6 +40,9 @@ from mikrotik_2fa_bot.handlers.admin import (
     test_router_cmd,
     admin_sessions_cmd,
     restart_bot_cmd,
+    add_admin_cmd,
+    remove_admin_cmd,
+    list_admins_cmd,
 )
 from mikrotik_2fa_bot.handlers.callbacks import callback_handler
 from mikrotik_2fa_bot.services import scheduler as scheduler_service
@@ -137,6 +140,9 @@ async def main():
     app.add_handler(CommandHandler("test_router", test_router_cmd))
     app.add_handler(CommandHandler("sessions", admin_sessions_cmd))
     app.add_handler(CommandHandler("restart_bot", restart_bot_cmd))
+    app.add_handler(CommandHandler("add_admin", add_admin_cmd))
+    app.add_handler(CommandHandler("remove_admin", remove_admin_cmd))
+    app.add_handler(CommandHandler("list_admins", list_admins_cmd))
     app.add_handler(CommandHandler("firewall", firewall_list_cmd))
 
     # Router settings conversation (inline keyboard + text input)
@@ -146,6 +152,8 @@ async def main():
                 CommandHandler("router_settings", router_settings_cmd),
                 # allow starting from ReplyKeyboard button
                 MessageHandler(filters.Regex(rf"^{BTN_ADMIN_ROUTER_SETTINGS}$"), router_settings_cmd),
+                # allow starting from Admin panel inline button
+                CallbackQueryHandler(router_settings_cmd, pattern=r"^admin_panel:router_settings$"),
             ],
             states={
                 CHOOSE_FIELD: [CallbackQueryHandler(router_settings_callback, pattern=r"^rs:")],

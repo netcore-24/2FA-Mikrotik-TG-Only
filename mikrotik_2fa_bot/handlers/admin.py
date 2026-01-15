@@ -10,6 +10,7 @@ from mikrotik_2fa_bot.handlers.util import is_admin
 from mikrotik_2fa_bot.handlers.menu import main_menu
 from mikrotik_2fa_bot.models import UserStatus, VpnSession
 from mikrotik_2fa_bot.services import mikrotik_api
+from mikrotik_2fa_bot.config import settings
 from mikrotik_2fa_bot.services.users import (
     list_pending_users,
     approve_user,
@@ -20,6 +21,14 @@ from mikrotik_2fa_bot.services.users import (
     create_or_update_user,
 )
 from mikrotik_2fa_bot.services.vpn_sessions import list_active_sessions_all_users
+from mikrotik_2fa_bot.services.app_settings import (
+    add_admin_id,
+    add_admin_username,
+    get_admin_ids,
+    get_admin_usernames,
+    remove_admin_id,
+    remove_admin_username,
+)
 
 
 async def pending_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -186,4 +195,69 @@ async def restart_bot_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Give Telegram a moment to deliver the message, then hard-exit.
     await asyncio.sleep(1)
     os._exit(0)  # noqa: S404
+
+
+async def list_admins_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_admin(update.effective_chat.id, update.effective_user.id, update.effective_user.username):
+        await update.message.reply_text("Недостаточно прав.")
+        return
+    with db_session() as db:
+        ids = sorted(get_admin_ids(db))
+        names = sorted(get_admin_usernames(db))
+    boot = getattr(settings, "ADMIN_USERNAME", "") or ""
+    lines = [
+        "Администраторы (DB):",
+        f"- ids: {', '.join(str(x) for x in ids) if ids else '-'}",
+        f"- usernames (pending): {', '.join('@'+x for x in names) if names else '-'}",
+    ]
+    if boot:
+        lines.append(f"\nBootstrap из env: @{boot.lstrip('@')}")
+    await update.message.reply_text("\n".join(lines))
+
+
+async def add_admin_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_admin(update.effective_chat.id, update.effective_user.id, update.effective_user.username):
+        await update.message.reply_text("Недостаточно прав.")
+        return
+    if not context.args:
+        await update.message.reply_text("Использование: /add_admin <telegram_id|@username>")
+        return
+    arg = (context.args[0] or "").strip()
+    if not arg:
+        await update.message.reply_text("Использование: /add_admin <telegram_id|@username>")
+        return
+    with db_session() as db:
+        if arg.lstrip("@").isdigit():
+            tid = int(arg.lstrip("@"))
+            add_admin_id(db, tid)
+            await update.message.reply_text(f"✅ Админ добавлен: user_id={tid}")
+            return
+        # Username: will be promoted to ID when that user messages the bot
+        add_admin_username(db, arg)
+    await update.message.reply_text(
+        "✅ Админ добавлен по username.\n"
+        "Важно: Telegram не позволяет надёжно получить user_id по username.\n"
+        "Когда этот пользователь напишет боту (/start), бот автоматически сохранит его user_id как админа."
+    )
+
+
+async def remove_admin_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_admin(update.effective_chat.id, update.effective_user.id, update.effective_user.username):
+        await update.message.reply_text("Недостаточно прав.")
+        return
+    if not context.args:
+        await update.message.reply_text("Использование: /remove_admin <telegram_id|@username>")
+        return
+    arg = (context.args[0] or "").strip()
+    if not arg:
+        await update.message.reply_text("Использование: /remove_admin <telegram_id|@username>")
+        return
+    with db_session() as db:
+        if arg.lstrip("@").isdigit():
+            tid = int(arg.lstrip("@"))
+            remove_admin_id(db, tid)
+            await update.message.reply_text(f"✅ Админ удалён: user_id={tid}")
+            return
+        remove_admin_username(db, arg)
+    await update.message.reply_text(f"✅ Админ удалён: {arg}")
 

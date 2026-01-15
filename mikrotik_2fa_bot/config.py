@@ -9,6 +9,9 @@ import re
 class Settings(BaseSettings):
     # Telegram
     TELEGRAM_BOT_TOKEN: str = ""
+    # Bootstrap admin by username (app will persist their numeric ID after they message the bot once)
+    ADMIN_USERNAME: str = ""  # without @
+    # Backward-compatible / optional admin configs:
     ADMIN_CHAT_ID: int | None = None
     # IMPORTANT: keep these as strings, because pydantic-settings treats List[...] as JSON-in-env
     # and will crash on empty values like ADMIN_TELEGRAM_IDS=.

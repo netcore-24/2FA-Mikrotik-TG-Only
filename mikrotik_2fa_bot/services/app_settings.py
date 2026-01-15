@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 from typing import Any, Optional
@@ -85,6 +86,76 @@ def get_setting_int(db: Session, key: str) -> Optional[int]:
         return int(str(v).strip())
     except Exception:
         return None
+
+
+def _get_json_list(db: Session, key: str) -> list:
+    raw = get_setting(db, key)
+    if not raw:
+        return []
+    try:
+        v = json.loads(raw)
+        return v if isinstance(v, list) else []
+    except Exception:
+        return []
+
+
+def _set_json_list(db: Session, key: str, items: list) -> None:
+    set_setting(db, key, json.dumps(list(items), ensure_ascii=False), encrypt=False)
+
+
+def get_admin_ids(db: Session) -> set[int]:
+    out: set[int] = set()
+    for v in _get_json_list(db, "admin_ids"):
+        try:
+            out.add(int(v))
+        except Exception:
+            continue
+    return out
+
+
+def add_admin_id(db: Session, telegram_id: int) -> None:
+    ids = get_admin_ids(db)
+    ids.add(int(telegram_id))
+    _set_json_list(db, "admin_ids", sorted(ids))
+
+
+def remove_admin_id(db: Session, telegram_id: int) -> None:
+    ids = get_admin_ids(db)
+    ids.discard(int(telegram_id))
+    _set_json_list(db, "admin_ids", sorted(ids))
+
+
+def get_admin_usernames(db: Session) -> set[str]:
+    out: set[str] = set()
+    for v in _get_json_list(db, "admin_usernames"):
+        u = ("" if v is None else str(v)).strip()
+        if u.startswith("@"):
+            u = u[1:]
+        if u:
+            out.add(u.lower())
+    return out
+
+
+def add_admin_username(db: Session, username: str) -> None:
+    u = (username or "").strip()
+    if u.startswith("@"):
+        u = u[1:]
+    u = u.lower()
+    if not u:
+        raise ValueError("invalid_username")
+    names = get_admin_usernames(db)
+    names.add(u)
+    _set_json_list(db, "admin_usernames", sorted(names))
+
+
+def remove_admin_username(db: Session, username: str) -> None:
+    u = (username or "").strip()
+    if u.startswith("@"):
+        u = u[1:]
+    u = u.lower()
+    names = get_admin_usernames(db)
+    names.discard(u)
+    _set_json_list(db, "admin_usernames", sorted(names))
 
 
 def apply_router_overrides_to_runtime_settings(db: Session, settings_obj: Any) -> None:

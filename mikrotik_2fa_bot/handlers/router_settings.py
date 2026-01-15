@@ -44,10 +44,25 @@ def _kb() -> InlineKeyboardMarkup:
 
 
 async def router_settings_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not is_admin(update.effective_chat.id, update.effective_user.id, update.effective_user.username):
-        await update.message.reply_text("Недостаточно прав.")
+    chat_id = update.effective_chat.id if update.effective_chat else None
+    user_id = update.effective_user.id if update.effective_user else None
+    username = update.effective_user.username if update.effective_user else None
+
+    q = update.callback_query
+    if not is_admin(chat_id, user_id, username):
+        if q:
+            await q.answer()
+            await q.edit_message_text("Недостаточно прав.")
+        else:
+            await update.message.reply_text("Недостаточно прав.")
         return ConversationHandler.END
-    await update.message.reply_text("Настройки роутера (RouterOS API): выберите что изменить:", reply_markup=_kb())
+
+    text = "Настройки роутера (RouterOS API): выберите что изменить:"
+    if q:
+        await q.answer()
+        await q.edit_message_text(text, reply_markup=_kb())
+    else:
+        await update.message.reply_text(text, reply_markup=_kb())
     return CHOOSE_FIELD
 
 

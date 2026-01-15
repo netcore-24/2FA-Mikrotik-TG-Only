@@ -38,8 +38,15 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not q:
         return
-    await q.answer()
     data = q.data or ""
+
+    # Router settings inline keyboard (works both inside and outside the ConversationHandler state)
+    if data.startswith("rs:"):
+        from mikrotik_2fa_bot.handlers.router_settings import router_settings_callback
+
+        return await router_settings_callback(update, context)
+
+    await q.answer()
 
     # Simple UI menu callbacks (compact ReplyKeyboard -> inline submenu)
     if data == "menu_vpn:request":
@@ -160,13 +167,6 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             fake_update._effective_chat = q.message.chat  # noqa: SLF001
             await q.edit_message_text("Ок, тестирую роутер ниже.")
             return await test_router_cmd(fake_update, context)
-        if action == "router_settings":
-            from mikrotik_2fa_bot.handlers.router_settings import router_settings_cmd
-            fake_update = Update(update.update_id, message=q.message)
-            fake_update._effective_user = q.from_user  # noqa: SLF001
-            fake_update._effective_chat = q.message.chat  # noqa: SLF001
-            await q.edit_message_text("Ок, открываю настройки роутера.")
-            return await router_settings_cmd(fake_update, context)
         if action == "firewall":
             from mikrotik_2fa_bot.handlers.firewall import firewall_list_cmd
             fake_update = Update(update.update_id, message=q.message)

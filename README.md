@@ -44,6 +44,15 @@ sudo bash install.sh
 
 См. `env.example`.
 
+Минимум для запуска:
+- `TELEGRAM_BOT_TOKEN`
+- `ADMIN_USERNAME` (без `@`) — первый админ. Бот автоматически “выучит” и сохранит его numeric `user_id` после первого `/start`.
+
+Управление админами через бота:
+- `/add_admin <telegram_id|@username>`
+- `/remove_admin <telegram_id|@username>`
+- `/list_admins`
+
 Дополнительно, админ может менять часть параметров **в рантайме** через Telegram команду `/router_settings`:
 - параметры подключения RouterOS API (host/port/ssl/user/pass/timeout)
 - поведение VPN/2FA: длительность сессии, таймаут подтверждения, повторные запросы подтверждения, grace period на отключение
