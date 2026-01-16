@@ -29,6 +29,43 @@ cp env.example .env
 ./venv/bin/python -m mikrotik_2fa_bot
 ```
 
+## Запуск в Docker
+
+Для Docker-версии мы держим отдельную ветку `docker` (там лежат `Dockerfile` и `docker-compose.yml`).
+
+Быстрый запуск локально через compose:
+
+```bash
+git checkout docker
+cp env.example .env
+mkdir -p data
+docker compose up -d --build
+docker compose logs -f bot
+```
+
+Готовые образы в Docker Hub:
+
+- `docker.io/netcore24/mikrotik-2fa-telegram-only:latest` (multi-arch)
+- `docker.io/netcore24/mikrotik-2fa-telegram-only:arm64` (только arm64)
+
+## Установка на MikroTik (RouterOS Containers, arm64)
+
+На RouterOS нет файла `.env`. Переменные передаются через `envlist` (команды `/container envs`).
+
+Минимум для запуска:
+
+- `TELEGRAM_BOT_TOKEN`
+- `ADMIN_USERNAME` (без `@`)
+- `MIKROTIK_HOST`
+- `MIKROTIK_USERNAME`
+- `MIKROTIK_PASSWORD`
+
+Если используете SQLite (по умолчанию), обязательно примонтируйте папку под БД в `/app/data` и задайте:
+
+- `DATABASE_URL=sqlite:////app/data/app.db`
+
+Пошаговая инструкция и готовые команды RouterOS: `routeros/README.md`.
+
 ## Установка одним скриптом (с автозапуском)
 
 Скрипт установит зависимости, **спросит в консоли** токен бота, `ADMIN_CHAT_ID`, адрес/логин/пароль MikroTik, создаст `.env` и systemd автозапуск:
