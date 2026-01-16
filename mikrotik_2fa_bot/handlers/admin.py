@@ -155,8 +155,24 @@ async def test_router_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Timeout: {settings.MIKROTIK_TIMEOUT_SECONDS}s"
     )
     try:
-        name = await asyncio.to_thread(mikrotik_api.test_connection)
-        await update.message.reply_text(f"✅ RouterOS API OK. Identity: {name}")
+        report = await asyncio.to_thread(mikrotik_api.test_connection_report)
+        lines = [
+            "✅ RouterOS API: OK",
+            f"- identity: {report.identity or 'unknown'}",
+            f"- tcp: {'OK' if report.tcp_ok else 'FAIL'}",
+        ]
+        if report.ip_service_api_enabled is not None:
+            lines.append(f"- /ip/service api enabled: {report.ip_service_api_enabled}")
+        if report.ip_service_api_ssl_enabled is not None:
+            lines.append(f"- /ip/service api-ssl enabled: {report.ip_service_api_ssl_enabled}")
+        if report.user_manager_ok is not None:
+            lines.append(f"- user-manager доступ: {'OK' if report.user_manager_ok else 'FAIL'}")
+        if report.firewall_ok is not None:
+            lines.append(f"- firewall read: {'OK' if report.firewall_ok else 'FAIL'}")
+        if report.notes:
+            lines.append("")
+            lines.extend([f"ℹ️ {n}" for n in report.notes[:5]])
+        await update.message.reply_text("\n".join(lines))
     except Exception as e:
         await update.message.reply_text(f"❌ RouterOS API ошибка: {e}")
 

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import inspect
 import ssl
 import socket
+import time
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Set
 
 from librouteros import connect as ros_connect
@@ -41,6 +42,22 @@ class ActiveSession:
     username: str
     session_id: Optional[str]
     source: str  # "user_manager" | "ppp_active"
+
+
+@dataclass(frozen=True, slots=True)
+class RouterTestReport:
+    host: str
+    port: int
+    use_ssl: bool
+    timeout_seconds: int
+    tcp_ok: bool
+    api_ok: bool
+    identity: str | None
+    user_manager_ok: bool | None
+    firewall_ok: bool | None
+    ip_service_api_enabled: bool | None
+    ip_service_api_ssl_enabled: bool | None
+    notes: List[str]
 
 
 @contextmanager
@@ -387,4 +404,107 @@ def test_connection() -> str:
             return "OK (empty identity response)"
         name = items[0].get("name")
         return str(name or "OK")
+
+
+def test_connection_report() -> RouterTestReport:
+    """
+    More detailed connectivity test via RouterOS API.
+    Useful for diagnostics from Telegram (/test_router).
+    """
+    host = settings.MIKROTIK_HOST
+    port = int(settings.MIKROTIK_PORT)
+    use_ssl = bool(settings.MIKROTIK_USE_SSL)
+    timeout_s = int(settings.MIKROTIK_TIMEOUT_SECONDS)
+    notes: List[str] = []
+
+    # TCP probe (fast fail with actionable error)
+    tcp_ok = False
+    s = socket.socket()
+    s.settimeout(float(timeout_s))
+    try:
+        s.connect((host, port))
+        tcp_ok = True
+    except Exception as e:  # noqa: BLE001
+        raise MikroTikAPIError(
+            f"TCP connect failed to {host}:{port}: {e}. "
+            "Проверьте что на MikroTik включен API сервис (/ip service enable api), "
+            "порт (8728 или 8729 для api-ssl), и что firewall разрешает доступ с IP сервера."
+        ) from e
+    finally:
+        try:
+            s.close()
+        except Exception:
+            pass
+
+    identity: str | None = None
+    user_manager_ok: bool | None = None
+    firewall_ok: bool | None = None
+    ip_service_api_enabled: bool | None = None
+    ip_service_api_ssl_enabled: bool | None = None
+
+    t0 = time.monotonic()
+    with ros_api() as api:
+        t_api = time.monotonic() - t0
+        notes.append(f"RouterOS API login OK ({t_api:.2f}s)")
+
+        # Identity (basic read)
+        try:
+            items = list(api.path("system/identity"))
+            if items:
+                identity = str(items[0].get("name") or "OK")
+        except Exception as e:  # noqa: BLE001
+            raise MikroTikAPIError(f"Failed to query /system/identity: {e}") from e
+
+        # /ip/service flags (best-effort; may require extra perms)
+        try:
+            for row in api.path("ip/service"):
+                if not isinstance(row, dict):
+                    continue
+                name = str(row.get("name") or "")
+                disabled = _normalize_bool(row.get("disabled"))
+                enabled = (disabled is False) if disabled is not None else None
+                if name == "api":
+                    ip_service_api_enabled = enabled
+                elif name == "api-ssl":
+                    ip_service_api_ssl_enabled = enabled
+        except Exception:
+            # Not fatal (read permissions differ by RouterOS user policy)
+            notes.append("Не удалось прочитать /ip/service (недостаточно прав?)")
+
+        # User Manager access (the bot relies on it)
+        try:
+            for _ in _iter_user_manager_users(api):
+                user_manager_ok = True
+                break
+            if user_manager_ok is None:
+                # No users but API path is readable
+                user_manager_ok = True
+        except Exception as e:  # noqa: BLE001
+            user_manager_ok = False
+            notes.append(f"User Manager недоступен через API: {e}")
+
+        # Firewall rules access (optional feature)
+        try:
+            for _ in api.path("ip/firewall/filter"):
+                firewall_ok = True
+                break
+            if firewall_ok is None:
+                firewall_ok = True
+        except Exception:
+            firewall_ok = False
+
+    return RouterTestReport(
+        host=host,
+        port=port,
+        use_ssl=use_ssl,
+        timeout_seconds=timeout_s,
+        tcp_ok=tcp_ok,
+        api_ok=True,
+        identity=identity,
+        user_manager_ok=user_manager_ok,
+        firewall_ok=firewall_ok,
+        ip_service_api_enabled=ip_service_api_enabled,
+        ip_service_api_ssl_enabled=ip_service_api_ssl_enabled,
+        notes=notes,
+    )
 

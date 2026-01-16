@@ -72,6 +72,7 @@ from mikrotik_2fa_bot.handlers.menu import (
     BTN_VPN_MENU,
     BTN_ADMIN_MENU,
     BTN_ADMIN_ROUTER_SETTINGS,
+    BTN_ADMIN_ROUTER_TEST,
 )
 from mikrotik_2fa_bot.handlers.registration import register_cmd
 from mikrotik_2fa_bot.handlers.user import request_vpn_cmd, my_sessions_cmd, disable_vpn_cmd
@@ -87,6 +88,10 @@ from mikrotik_2fa_bot.handlers.router_settings import (
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
+
+# Avoid leaking bot token via httpx request logs (URL contains the token).
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
@@ -226,6 +231,10 @@ async def main():
 
         if admin and txt == BTN_ADMIN_MENU:
             return await admin_users_panel_cmd(update, context)
+        if admin and txt == BTN_ADMIN_ROUTER_TEST:
+            return await test_router_cmd(update, context)
+        if admin and txt == BTN_ADMIN_ROUTER_SETTINGS:
+            return await router_settings_cmd(update, context)
 
         return await fallback_text_cmd(update, context)
 

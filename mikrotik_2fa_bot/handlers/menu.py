@@ -45,6 +45,8 @@ def main_menu(is_admin: bool, user_status: str | None = None) -> ReplyKeyboardMa
     ]
     if is_admin:
         rows.append([KeyboardButton(BTN_ADMIN_MENU)])
+        # Quick admin actions (in addition to the inline admin panel)
+        rows.append([KeyboardButton(BTN_ADMIN_ROUTER_TEST), KeyboardButton(BTN_ADMIN_ROUTER_SETTINGS)])
     return ReplyKeyboardMarkup(rows, resize_keyboard=True, is_persistent=True)
 
 
