@@ -29,6 +29,24 @@ cp env.example .env
 ./venv/bin/python -m mikrotik_2fa_bot
 ```
 
+## Запуск в Docker (docker compose)
+
+1) Создайте `.env` (можно от `env.example`) и заполните минимум:
+- `TELEGRAM_BOT_TOKEN`
+- `ADMIN_USERNAME` (без `@`)
+- `MIKROTIK_HOST`, `MIKROTIK_USERNAME`, `MIKROTIK_PASSWORD`
+
+2) Поднимите контейнер:
+
+```bash
+cd 2FA-Mikrotik-TG-Only
+mkdir -p data
+docker compose up -d --build
+docker compose logs -f
+```
+
+SQLite БД сохраняется в `./data` (примонтирована в контейнер как `/app/data`).
+
 ## Установка одним скриптом (с автозапуском)
 
 Скрипт установит зависимости, **спросит в консоли** токен бота, `ADMIN_CHAT_ID`, адрес/логин/пароль MikroTik, создаст `.env` и systemd автозапуск:

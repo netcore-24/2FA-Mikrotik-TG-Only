@@ -1,0 +1,13 @@
+services:
+  bot:
+    build:
+      context: .
+    container_name: mikrotik-2fa-telegram-only
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Persist SQLite DB
+      - ./data:/app/data
+      # Let the app read .env as a file too (pydantic-settings env_file=".env")
+      - ./.env:/app/.env:ro
