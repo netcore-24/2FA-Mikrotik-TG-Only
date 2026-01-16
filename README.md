@@ -47,6 +47,11 @@ docker compose logs -f
 
 SQLite БД сохраняется в `./data` (примонтирована в контейнер как `/app/data`).
 
+## Запуск на MikroTik (RouterOS Container, arm64)
+
+Для устройств MikroTik (RouterOS v7 + Container) нужен готовый образ в registry.
+См. простую инструкцию: `routeros/README.md`.
+
 ## Установка одним скриптом (с автозапуском)
 
 Скрипт установит зависимости, **спросит в консоли** токен бота, `ADMIN_CHAT_ID`, адрес/логин/пароль MikroTik, создаст `.env` и systemd автозапуск:
