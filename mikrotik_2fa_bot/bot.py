@@ -66,6 +66,7 @@ from mikrotik_2fa_bot.handlers.user_settings import (
 from mikrotik_2fa_bot.handlers.menu import (
     normalize_text,
     BTN_START,
+    BTN_HELP,
     BTN_REGISTER,
     BTN_VPN_MENU,
     BTN_ADMIN_MENU,
@@ -206,6 +207,8 @@ async def main():
 
         if txt == BTN_START:
             return await start_cmd(update, context)
+        if txt == BTN_HELP:
+            return await help_cmd(update, context)
         if txt == BTN_VPN_MENU:
             from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
@@ -216,6 +219,7 @@ async def main():
                 ], [
                     InlineKeyboardButton("⛔ Отключить VPN", callback_data="menu_vpn:disable"),
                 ], [
+                    InlineKeyboardButton("⬅️ Меню", callback_data="menu:home"),
                     InlineKeyboardButton("ℹ️ Инструкция", callback_data="menu:help"),
                 ]]
             )

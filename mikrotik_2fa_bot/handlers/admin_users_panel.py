@@ -16,18 +16,28 @@ async def admin_users_panel_cmd(update: Update, context: ContextTypes.DEFAULT_TY
         return ConversationHandler.END
     kb = InlineKeyboardMarkup(
         [
+            [InlineKeyboardButton("👤 Пользователи", callback_data="noop")],
             [InlineKeyboardButton("📝 Заявки", callback_data="admin_panel:pending")],
             [InlineKeyboardButton("⚙️ Настройки пользователя", callback_data="admin_panel:user_settings")],
-            [InlineKeyboardButton("🔗 Привязать UM user", callback_data="admin_panel:link_um")],
-            [InlineKeyboardButton("👥 Сессии", callback_data="admin_panel:sessions")],
-            [InlineKeyboardButton("🧱 Firewall", callback_data="admin_panel:firewall")],
-            [InlineKeyboardButton("🪪 Определить текущего пользователя", callback_data="admin_panel:whoami")],
+            [InlineKeyboardButton("🔗 Привязка UM", callback_data="admin_panel:link_um")],
+            [InlineKeyboardButton("🌐 Доступ и сессии", callback_data="noop")],
+            [
+                InlineKeyboardButton("👥 Сессии", callback_data="admin_panel:sessions"),
+                InlineKeyboardButton("🧱 Firewall", callback_data="admin_panel:firewall"),
+            ],
+            [InlineKeyboardButton("🛠️ Роутер", callback_data="noop")],
             [
                 InlineKeyboardButton("🧪 Тест роутера", callback_data="admin_panel:test_router"),
                 InlineKeyboardButton("⚙️ Настройки роутера", callback_data="admin_panel:router_settings"),
             ],
-            [InlineKeyboardButton("ℹ️ Инструкция", callback_data="admin_panel:help")],
+            [InlineKeyboardButton("ℹ️ Справка", callback_data="noop")],
+            [
+                InlineKeyboardButton("🪪 /whoami", callback_data="admin_panel:whoami"),
+                InlineKeyboardButton("ℹ️ Инструкция", callback_data="admin_panel:help"),
+            ],
+            [InlineKeyboardButton("⚙️ Сервис", callback_data="noop")],
             [InlineKeyboardButton("♻️ Перезапуск бота", callback_data="admin_panel:restart")],
+            [InlineKeyboardButton("⬅️ Меню", callback_data="menu:home")],
         ]
     )
     await update.message.reply_text("🛡️ Админ-панель", reply_markup=kb)
