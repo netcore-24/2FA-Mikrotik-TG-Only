@@ -112,21 +112,3 @@ sudo bash install.sh
 ## Поддержать автора
 
 Если проект вам полезен — буду благодарен за поддержку: `https://www.donationalerts.com/r/netcore_24`
-
-## Команды Telegram (план)
-
-- Пользователь:
-  - `/start`, `/help`
-  - `/register`
-  - `/request_vpn`
-  - `/my_sessions`
-  - `/disable_vpn`
-- Админ:
-  - `/pending`
-  - `/approve <telegram_id>`
-  - `/reject <telegram_id> <reason>`
-  - `/bind <telegram_id> <mikrotik_username>`
-  - `/unbind <telegram_id> <mikrotik_username>`
-  - `/set_fw_comment <telegram_id> <comment substring>`
-
-# 2FA-Mikrotik-TG-Only
