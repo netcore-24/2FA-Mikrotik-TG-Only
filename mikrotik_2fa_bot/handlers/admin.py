@@ -202,7 +202,10 @@ async def admin_sessions_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def restart_bot_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Admin: restart bot process.
-    We don't call systemctl from Telegram; instead we exit and systemd restarts us (Restart=always).
+    We don't call systemctl from Telegram.
+    Instead we hard-exit and let the supervisor restart us:
+      - systemd: Restart=always
+      - Docker / RouterOS Containers: restart policy (often restarts only on non-zero exit)
     """
     if not is_admin(update.effective_chat.id, update.effective_user.id, update.effective_user.username):
         await update.message.reply_text("Недостаточно прав.")
@@ -210,7 +213,7 @@ async def restart_bot_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("♻️ Перезапускаю бота…")
     # Give Telegram a moment to deliver the message, then hard-exit.
     await asyncio.sleep(1)
-    os._exit(0)  # noqa: S404
+    os._exit(1)  # noqa: S404
 
 
 async def list_admins_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
