@@ -21,10 +21,12 @@ async def admin_users_panel_cmd(update: Update, context: ContextTypes.DEFAULT_TY
             [InlineKeyboardButton("🔗 Привязать UM user", callback_data="admin_panel:link_um")],
             [InlineKeyboardButton("👥 Сессии", callback_data="admin_panel:sessions")],
             [InlineKeyboardButton("🧱 Firewall", callback_data="admin_panel:firewall")],
+            [InlineKeyboardButton("🪪 Определить текущего пользователя", callback_data="admin_panel:whoami")],
             [
                 InlineKeyboardButton("🧪 Тест роутера", callback_data="admin_panel:test_router"),
                 InlineKeyboardButton("⚙️ Настройки роутера", callback_data="admin_panel:router_settings"),
             ],
+            [InlineKeyboardButton("ℹ️ Инструкция", callback_data="admin_panel:help")],
             [InlineKeyboardButton("♻️ Перезапуск бота", callback_data="admin_panel:restart")],
         ]
     )
