@@ -70,6 +70,13 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         fake_update._effective_chat = q.message.chat  # noqa: SLF001
         await q.edit_message_text("Ок.")
         return await disable_vpn_cmd(fake_update, context)
+    if data == "menu:help":
+        from mikrotik_2fa_bot.handlers.basic import help_cmd
+        fake_update = Update(update.update_id, message=q.message)
+        fake_update._effective_user = q.from_user  # noqa: SLF001
+        fake_update._effective_chat = q.message.chat  # noqa: SLF001
+        await q.edit_message_text("Ок.")
+        return await help_cmd(fake_update, context)
 
     if data.startswith("request:"):
         username = data.split("request:", 1)[1]
@@ -167,6 +174,20 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             fake_update._effective_chat = q.message.chat  # noqa: SLF001
             await q.edit_message_text("Ок, тестирую роутер ниже.")
             return await test_router_cmd(fake_update, context)
+        if action == "whoami":
+            from mikrotik_2fa_bot.handlers.basic import whoami_cmd
+            fake_update = Update(update.update_id, message=q.message)
+            fake_update._effective_user = q.from_user  # noqa: SLF001
+            fake_update._effective_chat = q.message.chat  # noqa: SLF001
+            await q.edit_message_text("Ок.")
+            return await whoami_cmd(fake_update, context)
+        if action == "help":
+            from mikrotik_2fa_bot.handlers.basic import help_cmd
+            fake_update = Update(update.update_id, message=q.message)
+            fake_update._effective_user = q.from_user  # noqa: SLF001
+            fake_update._effective_chat = q.message.chat  # noqa: SLF001
+            await q.edit_message_text("Ок.")
+            return await help_cmd(fake_update, context)
         if action == "firewall":
             from mikrotik_2fa_bot.handlers.firewall import firewall_list_cmd
             fake_update = Update(update.update_id, message=q.message)

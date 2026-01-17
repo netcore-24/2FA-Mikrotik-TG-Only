@@ -66,13 +66,9 @@ from mikrotik_2fa_bot.handlers.user_settings import (
 from mikrotik_2fa_bot.handlers.menu import (
     normalize_text,
     BTN_START,
-    BTN_HELP,
-    BTN_WHOAMI,
     BTN_REGISTER,
     BTN_VPN_MENU,
     BTN_ADMIN_MENU,
-    BTN_ADMIN_ROUTER_SETTINGS,
-    BTN_ADMIN_ROUTER_TEST,
 )
 from mikrotik_2fa_bot.handlers.registration import register_cmd
 from mikrotik_2fa_bot.handlers.user import request_vpn_cmd, my_sessions_cmd, disable_vpn_cmd
@@ -155,8 +151,6 @@ async def main():
         ConversationHandler(
             entry_points=[
                 CommandHandler("router_settings", router_settings_cmd),
-                # allow starting from ReplyKeyboard button
-                MessageHandler(filters.Regex(rf"^{BTN_ADMIN_ROUTER_SETTINGS}$"), router_settings_cmd),
                 # allow starting from Admin panel inline button
                 CallbackQueryHandler(router_settings_cmd, pattern=r"^admin_panel:router_settings$"),
             ],
@@ -212,10 +206,6 @@ async def main():
 
         if txt == BTN_START:
             return await start_cmd(update, context)
-        if txt == BTN_HELP:
-            return await help_cmd(update, context)
-        if txt == BTN_WHOAMI:
-            return await whoami_cmd(update, context)
         if txt == BTN_VPN_MENU:
             from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
@@ -225,16 +215,14 @@ async def main():
                     InlineKeyboardButton("📡 Мои сессии", callback_data="menu_vpn:sessions"),
                 ], [
                     InlineKeyboardButton("⛔ Отключить VPN", callback_data="menu_vpn:disable"),
+                ], [
+                    InlineKeyboardButton("ℹ️ Инструкция", callback_data="menu:help"),
                 ]]
             )
             return await update.message.reply_text("VPN меню:", reply_markup=kb)
 
         if admin and txt == BTN_ADMIN_MENU:
             return await admin_users_panel_cmd(update, context)
-        if admin and txt == BTN_ADMIN_ROUTER_TEST:
-            return await test_router_cmd(update, context)
-        if admin and txt == BTN_ADMIN_ROUTER_SETTINGS:
-            return await router_settings_cmd(update, context)
 
         return await fallback_text_cmd(update, context)
 
