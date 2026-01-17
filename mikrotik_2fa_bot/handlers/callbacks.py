@@ -48,6 +48,9 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await q.answer()
 
+    if data == "noop":
+        return
+
     # Simple UI menu callbacks (compact ReplyKeyboard -> inline submenu)
     if data == "menu_vpn:request":
         from mikrotik_2fa_bot.handlers.user import request_vpn_cmd
@@ -70,6 +73,13 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         fake_update._effective_chat = q.message.chat  # noqa: SLF001
         await q.edit_message_text("Ок.")
         return await disable_vpn_cmd(fake_update, context)
+    if data == "menu:home":
+        from mikrotik_2fa_bot.handlers.basic import start_cmd
+        fake_update = Update(update.update_id, message=q.message)
+        fake_update._effective_user = q.from_user  # noqa: SLF001
+        fake_update._effective_chat = q.message.chat  # noqa: SLF001
+        await q.edit_message_text("Ок.")
+        return await start_cmd(fake_update, context)
     if data == "menu:help":
         from mikrotik_2fa_bot.handlers.basic import help_cmd
         fake_update = Update(update.update_id, message=q.message)

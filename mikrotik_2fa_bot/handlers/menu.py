@@ -6,6 +6,7 @@ from mikrotik_2fa_bot.models import UserStatus
 
 
 BTN_START = "🏠 Меню"
+BTN_HELP = "ℹ️ Инструкция"
 
 BTN_VPN_MENU = "🔑 VPN"
 BTN_ADMIN_MENU = "🛡️ Админ"
@@ -26,16 +27,17 @@ def main_menu(is_admin: bool, user_status: str | None = None) -> ReplyKeyboardMa
     """
     Persistent ReplyKeyboard menu.
     """
-    # If user is registered (approved) and NOT admin, show only VPN menu.
+    # If user is registered (approved) and NOT admin, keep menu + help + VPN only.
     status = (user_status or "").strip().lower()
     if (not is_admin) and status == UserStatus.APPROVED.value:
         rows: list[list[KeyboardButton]] = [
+            [KeyboardButton(BTN_START), KeyboardButton(BTN_HELP)],
             [KeyboardButton(BTN_VPN_MENU)],
         ]
         return ReplyKeyboardMarkup(rows, resize_keyboard=True, is_persistent=True)
 
     rows: list[list[KeyboardButton]] = [
-        [KeyboardButton(BTN_START)],
+        [KeyboardButton(BTN_START), KeyboardButton(BTN_HELP)],
         [KeyboardButton(BTN_VPN_MENU), KeyboardButton(BTN_REGISTER)],
     ]
     if is_admin:
