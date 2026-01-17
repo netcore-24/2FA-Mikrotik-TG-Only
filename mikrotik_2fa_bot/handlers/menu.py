@@ -6,8 +6,6 @@ from mikrotik_2fa_bot.models import UserStatus
 
 
 BTN_START = "🏠 Меню"
-BTN_HELP = "ℹ️ Помощь"
-BTN_WHOAMI = "🪪 Кто я"
 
 BTN_VPN_MENU = "🔑 VPN"
 BTN_ADMIN_MENU = "🛡️ Админ"
@@ -20,8 +18,6 @@ BTN_DISABLE_VPN = "⛔ Отключить VPN"
 BTN_ADMIN_PENDING = "🛡️ Админ: заявки"
 BTN_ADMIN_USERS = "🛡️ Админ: пользователи"
 BTN_ADMIN_SESSIONS = "🛡️ Админ: сессии"
-BTN_ADMIN_ROUTER_TEST = "🛡️ Админ: тест роутера"
-BTN_ADMIN_ROUTER_SETTINGS = "🛡️ Админ: настройки роутера"
 BTN_ADMIN_RESTART_BOT = "🛡️ Админ: перезапуск бота"
 BTN_ADMIN_FIREWALL = "🛡️ Админ: firewall"
 
@@ -39,14 +35,11 @@ def main_menu(is_admin: bool, user_status: str | None = None) -> ReplyKeyboardMa
         return ReplyKeyboardMarkup(rows, resize_keyboard=True, is_persistent=True)
 
     rows: list[list[KeyboardButton]] = [
-        [KeyboardButton(BTN_START), KeyboardButton(BTN_WHOAMI)],
+        [KeyboardButton(BTN_START)],
         [KeyboardButton(BTN_VPN_MENU), KeyboardButton(BTN_REGISTER)],
-        [KeyboardButton(BTN_HELP)],
     ]
     if is_admin:
         rows.append([KeyboardButton(BTN_ADMIN_MENU)])
-        # Quick admin actions (in addition to the inline admin panel)
-        rows.append([KeyboardButton(BTN_ADMIN_ROUTER_TEST), KeyboardButton(BTN_ADMIN_ROUTER_SETTINGS)])
     return ReplyKeyboardMarkup(rows, resize_keyboard=True, is_persistent=True)
 
 

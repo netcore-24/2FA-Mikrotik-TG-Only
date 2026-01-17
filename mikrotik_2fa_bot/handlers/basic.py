@@ -26,7 +26,55 @@ async def start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await start_cmd(update, context)
+    uid = update.effective_user.id
+    chat_id = update.effective_chat.id
+    username = getattr(update.effective_user, "username", None)
+    with db_session() as db:
+        u = get_user_by_telegram_id(db, uid)
+        status = u.status.value if u else "not_registered"
+    admin = is_admin(chat_id, uid, username)
+
+    if admin:
+        text = (
+            "ℹ️ Инструкция (админ)\n\n"
+            "Основной сценарий:\n"
+            "1) Пользователь делает /register и ждёт одобрения.\n"
+            "2) Вы одобряете заявки и привязываете UM-учётки (User Manager).\n"
+            "3) Пользователь запрашивает доступ: /request_vpn.\n"
+            "4) При подключении бот запрашивает 2FA подтверждение.\n\n"
+            "Где что делать:\n"
+            "- 🛡️ Админ → Заявки: одобрение/отклонение\n"
+            "- 🛡️ Админ → Настройки роутера: host/port/ssl/user/pass/timeout (в рантайме)\n"
+            "- 🛡️ Админ → Тест роутера: быстрая диагностика доступа к RouterOS API\n"
+            "- /whoami: ваши user_id/chat_id\n\n"
+            "Полезные команды:\n"
+            "- /pending, /approve, /reject\n"
+            "- /bind, /unbind\n"
+            "- /router_settings\n"
+            "- /test_router\n"
+        )
+    else:
+        text = (
+            "ℹ️ Инструкция (пользователь)\n\n"
+            "Полный цикл:\n"
+            "1) Нажмите 📝 Регистрация или выполните /register.\n"
+            "2) Дождитесь, пока админ одобрит заявку.\n"
+            "3) Запросите доступ: /request_vpn.\n"
+            "4) Подключитесь к VPN.\n"
+            "5) Бот попросит подтвердить вход (2FA) — подтвердите.\n\n"
+            "Когда доступ отключается автоматически:\n"
+            "- если вы отклонили 2FA или не подтвердили за время таймаута\n"
+            "- если истекло время сессии (SESSION_DURATION_HOURS)\n"
+            "- если админ отключил доступ\n\n"
+            "Полезное:\n"
+            "- /my_sessions — посмотреть активные сессии\n"
+            "- /disable_vpn — отключить доступ вручную\n"
+        )
+
+    await update.message.reply_text(
+        text,
+        reply_markup=main_menu(is_admin=admin, user_status=status),
+    )
 
 
 async def whoami_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
